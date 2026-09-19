@@ -1,0 +1,141 @@
+{
+  "id": "search",
+  "label": "Build vs. buy",
+  "question": "Should we build or buy AI search for our SaaS product?",
+  "context": "We are a 6-person engineering team with an 8-week launch target and a $25,000 initial budget. Search is a supporting feature. Assume a managed vendor costs $1,200/month, while a custom build costs $22,000 upfront and $300/month to operate. These are planning estimates, not vendor quotes.",
+  "models": {
+    "strategist": "Curated demo",
+    "engineer": "Curated demo",
+    "skeptic": "Curated demo"
+  },
+  "opinions": {
+    "strategist": {
+      "recommendation": "Buy, then learn.",
+      "rationale": "Search supports the product rather than defining it. With six engineers and eight weeks, spending the launch window on infrastructure would delay customer learning.",
+      "assumptions": [
+        "A vendor meets baseline relevance and access-control needs.",
+        "Search is not the primary product differentiator."
+      ],
+      "risks": [
+        "Usage pricing may rise with adoption.",
+        "Switching vendors becomes expensive without an adapter."
+      ]
+    },
+    "engineer": {
+      "recommendation": "Own a thin integration layer.",
+      "rationale": "Use a stable internal search contract and keep ingestion under your control. The managed path costs $14,400 in year one versus $25,600 for the custom estimate, excluding integration and migration costs.",
+      "assumptions": [
+        "Supplied cost estimates use the same currency.",
+        "Both options can satisfy existing data-access rules."
+      ],
+      "risks": [
+        "Vendor-specific ranking can leak into the application.",
+        "Integration effort is not included in the cost estimate."
+      ]
+    },
+    "skeptic": {
+      "recommendation": "Make the purchase reversible.",
+      "rationale": "A fast launch is only useful if results are relevant and data boundaries hold. Run an evaluation on representative queries before signing a long contract.",
+      "assumptions": [
+        "A representative query set can be assembled before launch.",
+        "A short vendor trial is available."
+      ],
+      "risks": [
+        "A demo can hide weak relevance on real queries.",
+        "Contract and data-residency terms may block adoption."
+      ]
+    }
+  },
+  "reviews": {
+    "strategist": {
+      "challenge": "A custom build offers control, but consumes most of the launch window.",
+      "concession": "The skeptic is right: speed does not excuse untested relevance.",
+      "revised_position": "Buy only after a short evaluation with explicit acceptance criteria."
+    },
+    "engineer": {
+      "challenge": "The strategist underestimates vendor-specific integration work.",
+      "concession": "A managed backend has the lower supplied first-year estimate.",
+      "revised_position": "Build the adapter and evaluation harness; rent the search backend."
+    },
+    "skeptic": {
+      "challenge": "The cost comparison omits migration work and future usage growth.",
+      "concession": "The engineer\u2019s adapter reduces a meaningful part of the exit risk.",
+      "revised_position": "Support a time-boxed pilot with an export test and a clear exit condition."
+    }
+  },
+  "memo": {
+    "title": "Buy the capability. Own the experience.",
+    "recommendation": "Start with managed search behind a provider-neutral interface.",
+    "summary": "Your constraint is time to useful customer feedback. A managed service gets search in front of users sooner, while a thin integration layer keeps a future migration practical. Reassess after the pilot produces real relevance and usage data.",
+    "agreement": [
+      "Use the launch window to validate customer value.",
+      "Keep application code independent of the search provider.",
+      "Evaluate representative queries before committing."
+    ],
+    "disagreements": [
+      "How much customization will relevance require?",
+      "Will usage growth erase the managed service\u2019s cost advantage?"
+    ],
+    "next_steps": [
+      "Create a 50-query evaluation set with expected results.",
+      "Run a two-week managed-search pilot behind an adapter.",
+      "Measure relevance, p95 latency, access isolation, and projected spend."
+    ],
+    "revisit_when": "Revisit if the pilot misses relevance targets, required controls are unavailable, or usage makes the build estimate more attractive.",
+    "matrix": {
+      "criteria": [
+        {
+          "name": "Time to value",
+          "weight": 35
+        },
+        {
+          "name": "Year-one cost",
+          "weight": 25
+        },
+        {
+          "name": "Control",
+          "weight": 20
+        },
+        {
+          "name": "Operability",
+          "weight": 20
+        }
+      ],
+      "options": [
+        {
+          "name": "Managed service",
+          "scores": [
+            9,
+            8,
+            5,
+            8
+          ]
+        },
+        {
+          "name": "Hybrid approach",
+          "scores": [
+            7,
+            6,
+            8,
+            7
+          ]
+        },
+        {
+          "name": "Custom build",
+          "scores": [
+            3,
+            4,
+            10,
+            5
+          ]
+        }
+      ]
+    }
+  },
+  "cost": {
+    "upfront": 22000,
+    "monthly": 300,
+    "months": 12,
+    "alternative_monthly": 1200
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "id": "support",
+  "label": "Automate support",
+  "question": "Should we launch an autonomous support bot or an agent copilot?",
+  "context": "A B2B product receives 800 support tickets per month. Answers may involve account permissions and billing. The support team has four agents. The knowledge base is incomplete, and avoiding incorrect account changes matters more than reducing response time.",
+  "models": {
+    "strategist": "Curated demo",
+    "engineer": "Curated demo",
+    "skeptic": "Curated demo"
+  },
+  "opinions": {
+    "strategist": {
+      "recommendation": "Improve the agent workflow.",
+      "rationale": "A copilot reaches all four agents without asking customers to trust an unproven bot. Measure draft acceptance and resolution time.",
+      "assumptions": [
+        "Agents can review suggested replies within their workflow."
+      ],
+      "risks": [
+        "Review overhead can offset drafting savings."
+      ]
+    },
+    "engineer": {
+      "recommendation": "Separate advice from actions.",
+      "rationale": "Keep account mutations behind existing authorization checks. Start with draft generation and explicit evidence links from approved material.",
+      "assumptions": [
+        "The existing helpdesk supports draft suggestions."
+      ],
+      "risks": [
+        "Poor source coverage limits useful recommendations."
+      ]
+    },
+    "skeptic": {
+      "recommendation": "Treat missing knowledge as a product problem.",
+      "rationale": "Automation amplifies inaccurate documentation. Track abstentions and rejected drafts rather than measuring response volume alone.",
+      "assumptions": [
+        "Agents can tag missing or incorrect documentation."
+      ],
+      "risks": [
+        "Agents may over-trust fluent drafts."
+      ]
+    }
+  },
+  "reviews": {
+    "strategist": {
+      "challenge": "Autonomous resolution would turn documentation gaps into customer-facing errors.",
+      "concession": "The engineer is right that integration overhead affects time saved.",
+      "revised_position": "Limit the first release to drafting for common low-risk tickets."
+    },
+    "engineer": {
+      "challenge": "A FAQ-only assistant is safer but leaves agent workflow problems unsolved.",
+      "concession": "The skeptic identifies a real automation-bias risk.",
+      "revised_position": "Display supporting material and keep account-action tools out of the pilot."
+    },
+    "skeptic": {
+      "challenge": "Draft acceptance alone can reward plausible but incorrect answers.",
+      "concession": "A reviewed copilot gives the team a useful feedback loop.",
+      "revised_position": "Audit accepted drafts as well as rejected ones before considering autonomy."
+    }
+  },
+  "memo": {
+    "title": "Assist first. Automate with evidence.",
+    "recommendation": "Launch an agent copilot with human review before any account action.",
+    "summary": "An incomplete knowledge base and consequential account changes make autonomous resolution a poor first release. A copilot can shorten drafting time while agents supply corrections and reveal gaps in the knowledge base.",
+    "agreement": [
+      "Keep account changes under existing human authorization.",
+      "Use feedback to improve documentation and evaluations."
+    ],
+    "disagreements": [
+      "How much review time will the copilot actually save?",
+      "Which ticket categories are safe to automate later?"
+    ],
+    "next_steps": [
+      "Select 100 historical tickets and have agents label expected answers.",
+      "Pilot draft-only assistance for two low-risk categories.",
+      "Audit correctness, time saved, abstentions, and unsupported claims."
+    ],
+    "revisit_when": "Consider limited automation only after audited results meet agreed quality targets and the relevant documentation is complete.",
+    "matrix": {
+      "criteria": [
+        {
+          "name": "Action safety",
+          "weight": 35
+        },
+        {
+          "name": "Answer quality",
+          "weight": 30
+        },
+        {
+          "name": "Time saved",
+          "weight": 20
+        },
+        {
+          "name": "Reversibility",
+          "weight": 15
+        }
+      ],
+      "options": [
+        {
+          "name": "Agent copilot",
+          "scores": [
+            8,
+            8,
+            7,
+            8
+          ]
+        },
+        {
+          "name": "Autonomous bot",
+          "scores": [
+            3,
+            5,
+            9,
+            4
+          ]
+        },
+        {
+          "name": "FAQ-only assistant",
+          "scores": [
+            9,
+            6,
+            4,
+            9
+          ]
+        }
+      ]
+    }
+  },
+  "cost": null
+}

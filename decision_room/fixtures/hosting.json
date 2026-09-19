@@ -1,0 +1,134 @@
+{
+  "id": "hosting",
+  "label": "Cloud vs. local",
+  "question": "Should we host an open model or use a managed LLM API?",
+  "context": "A small internal support tool serves 50 employees. Usage is uncertain and no dedicated ML operations team exists. Assume $2,400/month for a dedicated GPU host and $600/month for the API at expected usage. Sensitive data must be redacted before any external request.",
+  "models": {
+    "strategist": "Curated demo",
+    "engineer": "Curated demo",
+    "skeptic": "Curated demo"
+  },
+  "opinions": {
+    "strategist": {
+      "recommendation": "Validate demand first.",
+      "rationale": "Fifty users and uncertain demand make utilization the central unknown. Launch the smallest useful pilot before reserving infrastructure.",
+      "assumptions": [
+        "External processing is permitted after redaction."
+      ],
+      "risks": [
+        "Per-token spend grows with usage."
+      ]
+    },
+    "engineer": {
+      "recommendation": "Use a provider adapter.",
+      "rationale": "Instrument request volume and quality while keeping prompts portable. Under the supplied estimates, annual API spending is $7,200 versus $28,800 for hosting.",
+      "assumptions": [
+        "The API estimate includes expected prompt and response volume."
+      ],
+      "risks": [
+        "Redaction can remove context needed for useful answers."
+      ]
+    },
+    "skeptic": {
+      "recommendation": "Verify the data boundary.",
+      "rationale": "A low API bill does not justify sending restricted information outside the organization. Test redaction and access rules before enabling the pilot.",
+      "assumptions": [
+        "The organization has a documented external-processing policy."
+      ],
+      "risks": [
+        "Redaction may miss identifiers or secrets."
+      ]
+    }
+  },
+  "reviews": {
+    "strategist": {
+      "challenge": "Dedicated hosting assumes demand that has not been observed.",
+      "concession": "The data-policy constraint can outweigh the cost advantage.",
+      "revised_position": "Pilot a managed API only for approved, sanitized requests."
+    },
+    "engineer": {
+      "challenge": "Hybrid routing adds two failure paths to a small application.",
+      "concession": "Some sensitive tasks may require local execution.",
+      "revised_position": "Start with one provider adapter and record tasks that cannot use it."
+    },
+    "skeptic": {
+      "challenge": "A privacy claim requires tests rather than a provider label.",
+      "concession": "Managed infrastructure reduces operational burden.",
+      "revised_position": "Require redaction tests and a documented permitted-data policy before launch."
+    }
+  },
+  "memo": {
+    "title": "Start managed. Measure the workload.",
+    "recommendation": "Use a managed API with redaction and a portable model gateway.",
+    "summary": "At the supplied usage estimate, dedicated hosting adds cost and operating work before demand is established. A managed API supports the pilot while quality tests and usage telemetry reveal whether local hosting is justified.",
+    "agreement": [
+      "Measure quality and usage during a limited pilot.",
+      "Keep prompts and provider integration portable."
+    ],
+    "disagreements": [
+      "Which tasks can legally and operationally use external processing?",
+      "At what utilization would dedicated hosting become worthwhile?"
+    ],
+    "next_steps": [
+      "Define permitted data and test the redaction layer.",
+      "Pilot with a small opt-in team and a spending limit.",
+      "Compare task quality and cost using a representative evaluation set."
+    ],
+    "revisit_when": "Revisit when observed usage changes the cost comparison or data restrictions exclude a managed provider.",
+    "matrix": {
+      "criteria": [
+        {
+          "name": "Launch speed",
+          "weight": 30
+        },
+        {
+          "name": "Expected cost",
+          "weight": 25
+        },
+        {
+          "name": "Data control",
+          "weight": 25
+        },
+        {
+          "name": "Operations",
+          "weight": 20
+        }
+      ],
+      "options": [
+        {
+          "name": "Managed API",
+          "scores": [
+            9,
+            8,
+            6,
+            8
+          ]
+        },
+        {
+          "name": "Self-hosted model",
+          "scores": [
+            4,
+            3,
+            10,
+            4
+          ]
+        },
+        {
+          "name": "Hybrid routing",
+          "scores": [
+            6,
+            6,
+            8,
+            6
+          ]
+        }
+      ]
+    }
+  },
+  "cost": {
+    "upfront": 0,
+    "monthly": 2400,
+    "months": 12,
+    "alternative_monthly": 600
+  }
+}
