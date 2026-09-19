@@ -1,0 +1,52 @@
+name: Quality checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.13"
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+      - run: uv run python scripts/evaluate.py
+      - name: Install browser
+        run: uv run playwright install --with-deps chromium
+      - name: Exercise the browser
+        run: |
+          uv run uvicorn decision_room.app:app --host 127.0.0.1 --port 7860 > /tmp/room.log 2>&1 &
+          trap 'kill $!' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:7860/api/health; then break; fi
+            sleep 1
+          done
+          uv run python scripts/check_ui.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-screenshots
+          path: test-results/screenshots
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and check demo container
+        run: |
+          docker build -t decision-room .
+          docker run -d --name decision-room -p 127.0.0.1:7860:7860 decision-room
+          trap 'docker logs decision-room; docker rm -f decision-room' EXIT
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:7860/api/health; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:7860/api/health
+          curl -fsS http://127.0.0.1:7860/ > /dev/null
