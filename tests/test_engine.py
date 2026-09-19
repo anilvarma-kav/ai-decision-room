@@ -159,3 +159,62 @@ async def test_cancellation_reaches_all_pending_provider_calls():
     with pytest.raises(asyncio.CancelledError):
         await task
     assert len(cancelled) == 3
+
+
+async def test_rejected_tool_preserves_inputs_and_allows_recovery():
+    from decision_room.models import Opinion
+
+    calls = 0
+    bad_args = {"upfront": -50, "monthly": 2, "months": 12, "alternative_monthly": 10}
+
+    async def complete(**kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return response(
+                tools=[
+                    {
+                        "id": "bad-cost",
+                        "type": "function",
+                        "function": {"name": "compare_costs", "arguments": json.dumps(bad_args)},
+                    }
+                ]
+            )
+        assert "error" in json.loads(kwargs["messages"][-1]["content"])
+        return response(json.dumps(scenario("search")["opinions"]["engineer"]))
+
+    async def emit(_):
+        pass
+
+    engine = Deliberation(request(), emit, complete)
+    await engine.ask("engineer", "opinion", "Compare costs", Opinion, tools=True)
+    assert engine.tool_calls[0]["arguments"] == bad_args
+    assert "error" in engine.tool_calls[0]["result"]
+
+
+async def test_tool_loop_has_a_hard_limit():
+    from decision_room.models import Opinion
+
+    calls = 0
+
+    async def complete(**kwargs):
+        nonlocal calls
+        calls += 1
+        return response(
+            tools=[
+                {
+                    "id": f"repeat{calls}",
+                    "type": "function",
+                    "function": {"name": "unknown", "arguments": "{}"},
+                }
+            ]
+        )
+
+    async def emit(_):
+        pass
+
+    with pytest.raises(RunError, match="tool-call limit"):
+        await Deliberation(request(), emit, complete).ask(
+            "engineer", "opinion", "Compare", Opinion, tools=True
+        )
+    assert calls == 3

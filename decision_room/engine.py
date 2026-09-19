@@ -116,11 +116,11 @@ class Deliberation:
                 messages.append(message.model_dump(exclude_none=True))
                 for tool_call in message.tool_calls:
                     name = tool_call.function.name
+                    arguments = {"unparsed": tool_call.function.arguments}
                     try:
                         arguments = json.loads(tool_call.function.arguments)
                         result = execute_tool(name, tool_call.function.arguments)
                     except (ValueError, TypeError, ValidationError):
-                        arguments = {}
                         result = {
                             "error": "Invalid arguments or unknown tool. Use the provided schema."
                         }
@@ -203,6 +203,8 @@ class Deliberation:
             Review,
         )
         await self.emit({"type": "phase", "phase": "memo", "label": "Decision memo"})
+        # Reuse a provider that produced a valid initial perspective.
+        self.models["editor"] = self.models[next(iter(opinions))]
         memo = await self.ask(
             "editor",
             "memo",
