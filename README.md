@@ -12,9 +12,33 @@ pinned: false
 
 # AI Decision Room
 
-Three perspectives analyze a technical tradeoff, challenge one another, and produce one decision memo. The browser interface is built with Gradio and can run locally or as a Hugging Face Space.
+[![Try on Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Try%20the%20demo-yellow)](https://huggingface.co/spaces/anilvarmakav/ai-decision-room)
 
-The app keeps the original deliberation engine: Pydantic validated model output, bounded tool use, parallel panel calls, peer critique, a final editor, SQLite history, and Markdown/JSON exports.
+**A workspace for exploring technical decisions with three AI perspectives, peer critique, and an inspectable decision memo.**
+
+[Open the hosted app](https://huggingface.co/spaces/anilvarmakav/ai-decision-room) · [Architecture](docs/architecture.md) · [Recorded live result](examples/live-search.md) · [Source on GitHub](https://github.com/anilvarma-kav/ai-decision-room)
+
+Built with **Python, Gradio, LiteLLM, Pydantic, and SQLite**. The strategist, engineer, and skeptic analyze a brief, challenge one another, and pass their findings to an editor that produces a structured recommendation.
+
+## Try the demo — no API keys needed
+
+1. Open [AI Decision Room on Hugging Face](https://huggingface.co/spaces/anilvarmakav/ai-decision-room).
+2. Keep **Curated demo** selected and choose an **Example brief**.
+3. Click **Open the decision room**.
+4. Explore **Decision memo**, **Panel and critique**, and **Audit record**, then download the Markdown memo or JSON record.
+
+The three examples cover AI search, hosting, and customer support. They replay saved responses with local calculations and make no model API calls. For an actual recorded model run, see the [live memo](examples/live-search.md) and [audit record](examples/live-search.json). If the Space is sleeping, allow it to start before using the controls.
+
+## Engineering highlights
+
+| Area | Implementation |
+| --- | --- |
+| Orchestration | Concurrent initial opinions, concurrent peer critiques, and a final editor |
+| Structured output | Pydantic contracts validate opinions, reviews, and the memo |
+| Tool use | Bounded cost comparisons and weighted scoring; final rankings computed in Python |
+| Failure handling | Request limits, deadlines, and disclosed partial failures; failed runs are not saved |
+| Inspectability | Phase updates, model and usage metadata, tool records, SQLite history, and exports |
+| Delivery | Gradio UI, automated tests, Docker support, and GitHub Actions deployment to Spaces |
 
 ## Features
 
@@ -49,7 +73,13 @@ uv run python app.py
 
 ## Enable live models
 
-Copy `.env.example` to `.env`, set `ENABLE_LIVE=1`, and add at least one provider key. Restart the app after changing environment variables.
+For local runs, copy `.env.example` to `.env`, set `ENABLE_LIVE=1`, and add the keys for the providers you want to use. Restart the app after changing environment variables.
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell, use `Copy-Item .env.example .env`.
 
 ```dotenv
 ENABLE_LIVE=1
@@ -60,18 +90,29 @@ GEMINI_API_KEY=
 
 Model IDs can be changed with `MODEL_OPENAI`, `MODEL_ANTHROPIC`, `MODEL_GEMINI`, and `MODEL_OLLAMA`. For a local Ollama model, also set `ENABLE_OLLAMA=1` and ensure Ollama is running.
 
-Live runs incur provider charges. Roles are prompted perspectives; using different models does not guarantee independent or correct conclusions.
+Choose **Live models**, enter a brief, and assign configured providers under **Panel models**. One configured provider can serve all three roles. Cloud API usage is billed by the provider separately from Hugging Face hosting.
 
 ## Deploy to Hugging Face Spaces
 
-1. Create a new **Gradio** Space.
-2. Push this repository to the Space repository.
-3. Add provider API keys under **Settings → Variables and secrets**.
-4. Add `ENABLE_LIVE=1` as a variable if live runs should be available.
+The public demo is deployed at **[anilvarmakav/ai-decision-room](https://huggingface.co/spaces/anilvarmakav/ai-decision-room)**. Its curated examples work without secrets.
 
-`app.py`, the README metadata above, and `requirements.txt` provide the standard Spaces entry point and dependencies. The demo works without any Space secrets.
+To deploy your own copy, create a **Gradio** Space and upload the repository files, or configure the GitHub workflow described below with your Space ID. The README metadata, `app.py`, and `requirements.txt` provide the build configuration.
 
-The free Space filesystem is not durable across rebuilds. Attach a Storage Bucket and set `DATABASE_PATH` inside its mount if decision history must survive restarts.
+### Configure live models on a Space
+
+In your Space's **Settings → Variables and secrets**, use **New secret** for provider credentials:
+
+| Secret | Provider |
+| --- | --- |
+| `OPENAI_API_KEY` | OpenAI |
+| `ANTHROPIC_API_KEY` | Anthropic |
+| `GEMINI_API_KEY` | Google Gemini |
+
+Add `ENABLE_LIVE=1` as a **variable**, then select only configured providers in the app after it restarts. Model overrides belong in variables. Do not upload a `.env` file or put API keys in public variables. `HF_TOKEN` is a deployment credential and does not replace model provider keys.
+
+Ollama is intended for local use unless you configure a separately reachable Ollama service. A Space cannot connect to the Ollama server on your laptop through `localhost`.
+
+The default Space filesystem is ephemeral. Download results you want to keep; configure durable storage and `DATABASE_PATH` if history must survive rebuilds. See the [Spaces configuration guide](https://huggingface.co/docs/hub/spaces-overview#managing-secrets-and-environment-variables) for secrets and variables.
 
 ## Docker
 
@@ -103,8 +144,19 @@ The repository includes an actual mixed provider result for “Should we build o
 
 The sample is one recorded run, not an accuracy, speed, or price benchmark.
 
+## Design limits
+
+- Roles are prompted perspectives; multiple models do not guarantee correct conclusions. The memo exposes disagreements and assumptions for human review.
+- This is a personal workspace with shared decision history, not per-user private storage. Use example briefs on the public demo.
+- The app binds to `0.0.0.0` for Spaces and containers. Use deployment access controls when handling private briefs or enabling paid model calls.
+- Usage and cost reports depend on provider metadata. Request caps and timeouts do not guarantee a dollar spending limit.
+
 ## Automatic deployment from GitHub
 
 The `Deploy to Hugging Face Spaces` workflow syncs `main` to [the hosted app](https://huggingface.co/spaces/anilvarmakav/ai-decision-room) on every push. Add a Hugging Face token with write permission for this Space as the GitHub repository Actions secret `HF_TOKEN`. You can also run the workflow manually from the Actions tab.
 
-The workflow uploads repository files; model provider API keys belong in Hugging Face Space secrets. CPU Basic has no hourly charge; creating a standard Gradio Space currently requires an eligible paid Hugging Face plan.
+The workflow is defined in [`.github/workflows/deploy-space.yml`](https://github.com/anilvarma-kav/ai-decision-room/blob/main/.github/workflows/deploy-space.yml). For a fork, change `huggingface_repo_id` to your own Space. It syncs repository files; configure model provider keys separately in Space secrets. The hosted demo uses CPU Basic.
+
+## Related project
+
+[Model Roundtable](https://github.com/anilvarma-kav/model-roundtable) explores sequential conversations between cloud and local models. [Try its hosted demo](https://huggingface.co/spaces/anilvarmakav/model-roundtable).
