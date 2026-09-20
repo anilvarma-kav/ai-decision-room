@@ -19,22 +19,15 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run pytest -q
       - run: uv run python scripts/evaluate.py
-      - name: Install browser
-        run: uv run playwright install --with-deps chromium
-      - name: Exercise the browser
+      - name: Start Gradio app
         run: |
-          uv run uvicorn decision_room.app:app --host 127.0.0.1 --port 7860 > /tmp/room.log 2>&1 &
+          uv run python app.py > /tmp/room.log 2>&1 &
           trap 'kill $!' EXIT
           for attempt in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:7860/api/health; then break; fi
+            if curl -fsS http://127.0.0.1:7860/ > /dev/null; then break; fi
             sleep 1
           done
-          uv run python scripts/check_ui.py
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: browser-screenshots
-          path: test-results/screenshots
+          curl -fsS http://127.0.0.1:7860/ > /dev/null
   container:
     runs-on: ubuntu-latest
     steps:
@@ -45,8 +38,7 @@ jobs:
           docker run -d --name decision-room -p 127.0.0.1:7860:7860 decision-room
           trap 'docker logs decision-room; docker rm -f decision-room' EXIT
           for attempt in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:7860/api/health; then break; fi
+            if curl -fsS http://127.0.0.1:7860/ > /dev/null; then break; fi
             sleep 1
           done
-          curl -fsS http://127.0.0.1:7860/api/health
           curl -fsS http://127.0.0.1:7860/ > /dev/null

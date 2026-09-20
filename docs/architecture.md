@@ -4,8 +4,8 @@ The system makes one bounded deliberation easy to inspect. It uses three role ca
 
 ```mermaid
 flowchart TD
-    UI[Browser: brief and provider choices] --> API[FastAPI validates and authorizes request]
-    API --> MODE{Run mode}
+    UI[Gradio: brief and provider choices] --> HANDLER[Handler validates request]
+    HANDLER --> MODE{Run mode}
     MODE -->|Demo| FIX[Curated fixture replay]
     MODE -->|Live| P[Independent analysis: three async calls]
     P <--> TOOLS[Validated cost and scoring tools]
@@ -17,10 +17,10 @@ flowchart TD
     FIX --> V
     V --> DB[(SQLite journal)]
     DB --> EXPORT[Markdown and JSON exports]
-    P -. lifecycle, tools, usage .-> SSE[Server-sent events]
-    R -. validated critiques .-> SSE
-    DB -. complete report .-> SSE
-    SSE --> UI
+    P -. lifecycle, tools, usage .-> STREAM[Gradio streaming updates]
+    R -. validated critiques .-> STREAM
+    DB -. complete report .-> STREAM
+    STREAM --> UI
 ```
 
 ## The contracts
@@ -77,7 +77,7 @@ These are workload limits, not a dollar spending guarantee. Providers can charge
 
 ## Streaming
 
-The browser POSTs a request and reads its `text/event-stream` response using `fetch` and a streaming decoder. The server sends named JSON event types, with heartbeat comments during quiet periods. Each completed perspective and critique appears in the interface as it arrives.
+The Gradio event handler starts the deliberation in an async task and consumes its typed events through an `asyncio.Queue`. It yields phase progress, then the validated memo, panel view, audit record, and export files.
 
 The engine is transport-independent: it receives an async event callback. Tests inject a fake completion function and collect its events without making paid requests.
 
@@ -87,18 +87,16 @@ There is no token-by-token rendering. Complete responses are validated first, th
 
 The SQLite journal saves completed reports with a generated ID and a UTC creation timestamp. Each operation uses a separate connection and parameterized SQL. History exposes the 30 most recent results. Aborted runs are not saved.
 
-The default bind address is localhost. Optional bearer authentication protects run creation, history, and exports. The browser holds that token in memory only. POST requests with a foreign Origin are rejected. Provider credentials never enter browser responses or committed fixtures.
+The app binds to all interfaces so it can run in a Space or container. Hugging Face Space visibility controls access to a hosted app. Provider credentials stay in environment variables or Space secrets and never enter browser responses or committed fixtures.
 
 This is a personal workspace. The in-process concurrency flag requires one worker. Multi-user production hosting would need per-user records, a shared queue, durable run state, access controls, and a provider-side budget policy. A bearer token is not a multi-user authentication system.
 
 ## Frontend
 
-The browser application has no runtime JavaScript framework. Model and user strings are escaped before insertion into templates. Tab controls support arrow keys, focus states are visible, forms have labels, and the layout reflows to a 390-pixel mobile viewport. Fonts are loaded from Google Fonts with system fallbacks.
-
-The browser checks exercise real HTTP routes. Screenshots are captured directly from the rendered application; they are not design mockups.
+Gradio provides the responsive layout, labeled controls, tabs, progress transport, file downloads, and queue. Application code formats only validated model output and stored reports.
 
 ## Technical references
 
 - [LiteLLM function calling](https://docs.litellm.ai/docs/completion/function_call) for provider-neutral tool messages.
 - [LiteLLM usage](https://docs.litellm.ai/docs/completion/usage) for reported token accounting.
-- [FastAPI streaming responses](https://fastapi.tiangolo.com/advanced/custom-response/) for the event transport.
+- [Gradio streaming outputs](https://www.gradio.app/guides/streaming-outputs) for progressive interface updates.
