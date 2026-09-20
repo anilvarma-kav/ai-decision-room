@@ -71,7 +71,7 @@ Live runs incur provider charges. Roles are prompted perspectives; using differe
 
 `app.py`, the README metadata above, and `requirements.txt` provide the standard Spaces entry point and dependencies. The demo works without any Space secrets.
 
-The free Space filesystem is not durable across rebuilds. Use a persistent storage upgrade and set `DATABASE_PATH` inside that mounted storage if decision history must survive restarts.
+The free Space filesystem is not durable across rebuilds. Attach a Storage Bucket and set `DATABASE_PATH` inside its mount if decision history must survive restarts.
 
 ## Docker
 
@@ -102,3 +102,9 @@ The repository includes an actual mixed provider result for “Should we build o
 - [JSON audit record](examples/live-search.json)
 
 The sample is one recorded run, not an accuracy, speed, or price benchmark.
+
+## Automatic deployment from GitHub
+
+The `Deploy to Hugging Face Spaces` workflow syncs `main` to [the hosted app](https://huggingface.co/spaces/anilvarmakav/ai-decision-room) on every push. Add a Hugging Face token with write permission for this Space as the GitHub repository Actions secret `HF_TOKEN`. You can also run the workflow manually from the Actions tab.
+
+The workflow uploads repository files; model provider API keys belong in Hugging Face Space secrets. CPU Basic has no hourly charge; creating a standard Gradio Space currently requires an eligible paid Hugging Face plan.
